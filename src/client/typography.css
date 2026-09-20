@@ -1,0 +1,120 @@
+/* Locally served variable type, shared by the workspace and review surfaces. */
+:root {
+  font-family: 'DM Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  --type-caption: .75rem;
+  --type-label: .8125rem;
+  --type-body: .9375rem;
+  --muted: #70756a;
+}
+button { font-size: var(--type-label); font-weight: 550; }
+input, textarea, select { font-size: 1rem; }
+select { font-size: var(--type-label); color: #62685c; }
+h1, h2, h3 { text-wrap: balance; }
+h1 { font-size: clamp(2.125rem, 3.4vw, 3rem); font-weight: 550; letter-spacing: -.045em; line-height: 1.15; }
+h1 > span { font-weight: 450; color: #737d67; }
+h2, .plan-heading h2 { font-size: 1.375rem; letter-spacing: -.025em; }
+h3 { font-size: 1.0625rem; letter-spacing: -.02em; }
+.lede { font-size: 1rem; line-height: 1.75; color: #717569; }
+.brand > span:not(.beta) { font-size: 2rem; font-weight: 600; letter-spacing: -.065em; }
+.beta { font-size: .5625rem; }
+.space-switch strong, .sidebar-profile strong { font-size: var(--type-label); }
+.space-switch small, .sidebar-profile small { font-size: .6875rem; color: #b3b8a9; }
+.space-switch { padding-inline: 7px; gap: 7px; }
+.space-chevron { display: none; }
+.nav-link { font-size: var(--type-label); gap: 9px; padding-inline: 10px; }
+.nav-agent { font-size: var(--type-label); }
+.nav-label { font-size: .625rem; letter-spacing: .12em; color: #acb39f; }
+.nav-count { font-size: .6875rem; }
+.control-note strong { font-size: var(--type-label); }
+.control-note p { font-size: var(--type-caption); color: #b3b8a9; line-height: 1.7; }
+.breadcrumb, .execution-label { font-size: var(--type-caption); color: #777d6e; }
+.badge, .badge.subtle { font-size: .625rem; letter-spacing: .06em; color: #727768; }
+.badge.subtle { white-space: normal; }
+.badge.live { color: #4d8068; }
+.eyebrow, .aside-box .eyebrow { font-size: .6875rem; letter-spacing: .13em; color: #767d6b; }
+.intro-note strong { font-size: var(--type-label); color: #68715c; }
+.intro-note small { font-size: var(--type-caption); color: #7b8174; }
+.section-heading > h2 { font-size: 1.0625rem; letter-spacing: -.02em; }
+.section-heading > h2 > span { font-size: .6875rem; }
+.muted, .section-heading > .muted, .composer > .muted { font-size: var(--type-caption); }
+.agent-card h3 { font-size: 1.0625rem; font-weight: 600; }
+.agent-card p { font-size: var(--type-body); line-height: 1.65; color: #73786c; }
+.agent-card-footer, .active-agent .agent-card-footer { font-size: .6875rem; color: #727b63; }
+.agent-status, .coming-label { font-size: .6875rem; }
+.coming-label { color: #777c6f; }
+.composer-agent h2 { font-size: 1.1875rem; letter-spacing: -.025em; }
+.composer-agent small { font-size: var(--type-caption); color: #767c6e; }
+.composer textarea { font-size: 1rem; line-height: 1.7; }
+.examples > span { font-size: .625rem; color: #777d6e; }
+.chip { font-size: var(--type-caption); color: #707768; }
+.composer-bottom { flex-wrap: wrap; }
+.getting-started-heading h3 { font-size: 1rem; color: #626c56; }
+.getting-started-heading > span { font-size: .625rem; color: #777d6e; }
+.steps strong { font-size: .875rem; font-weight: 600; color: #636e56; }
+.steps p { font-size: var(--type-label); line-height: 1.7; color: #777d6e; }
+.steps > div > span { font-size: .6875rem; }
+.review-progress, .facts-panel summary > span { font-size: var(--type-caption); }
+.facts-panel summary { font-size: .875rem; }
+.facts-panel > p, .facts-grid label, .facts-actions button { font-size: var(--type-label); }
+.facts-grid input { font-size: 1rem; }
+.required { font-size: .6875rem; }
+.filter-tabs button { font-size: var(--type-label); }
+.filter-tabs button > span, .toolbar-note { font-size: .6875rem; }
+.card-top h3 { font-size: 1rem; }
+.card-top > div { min-width: 0; overflow-wrap: anywhere; }
+.card-top .muted, .tags, .preference, .receipt { font-size: var(--type-caption); }
+.status { font-size: .6875rem; }
+.draft { font-size: var(--type-body); line-height: 1.8; color: #535b4b; }
+.preference { color: #787e70; }
+.tags { color: #777d6e; }
+.card-footer { flex-wrap: wrap; gap: 6px; }
+.card-footer button { font-size: var(--type-label); }
+.quiet, .reject { color: #73796c; }
+.filter-empty, .error { font-size: var(--type-body); }
+.aside-box h3 { font-size: 1.125rem; }
+.aside-box p:not(.eyebrow) { font-size: .875rem; line-height: 1.75; color: #737b69; }
+.aside-box textarea { font-size: 1rem; }
+.aside-box button { font-size: var(--type-caption); }
+.aside-footnote, .citation { font-size: var(--type-caption); color: #78806d; }
+.site-footer { font-size: .6875rem; color: #7d8473; }
+.log-entry { font-size: .875rem; grid-template-columns: 90px 1fr; }
+.log-entry time, .log-entry p { font-size: var(--type-caption); color: #767d6c; }
+.editor > p { font-size: var(--type-body); color: #747c68; }
+.edit-field, .auth { font-size: .875rem; }
+.edit-field textarea { font-size: 1rem; }
+@media (min-width:721px) and (max-width:1180px) {
+  .sidebar { width: 220px; }
+  .app-main { margin-left: 220px; }
+  .agent-grid { gap: 10px; }
+  .agent-card { padding-inline: 12px; }
+  .agent-card-top { flex-wrap: wrap; }
+  .composer > .section-heading { flex-wrap: wrap; }
+}
+@media (max-width:720px) {
+  .nav-link { font-size: 0; gap: 0; padding: 8px; }
+  .brand > span:not(.beta) { font-size: 1.75rem; }
+  .breadcrumb { font-size: .6875rem; gap: 6px; }
+  .breadcrumb > strong { max-width: 85px; line-height: 1.25; }
+  h1 { font-size: 2.25rem; }
+  .lede { font-size: .9375rem; }
+  .agents-section > .section-heading { flex-wrap: wrap; gap: 4px; }
+  .agent-card h3 { font-size: 1rem; }
+  .agent-card p { font-size: .875rem; }
+  .agent-card p br { display: none; }
+  .agent-card-top { flex-wrap: wrap; }
+  .active-agent .agent-status { position: static; margin-top: 8px; font-size: .625rem; }
+  .active-agent h3 { padding-right: 0; }
+  .composer select { font-size: 1rem; max-width: 100%; }
+  .plan-heading { gap: 12px; align-items: flex-start; }
+  .plan-heading h2 { font-size: 1.25rem; }
+  .review-progress { min-width: 82px; }
+  .facts-actions { flex-wrap: wrap; }
+  .card-top { flex-wrap: wrap; gap: 9px; }
+  .card-top > div { flex: 1; }
+  .card-footer { padding: 12px; gap: 4px; }
+  .card-footer button { padding: 9px 8px; }
+  .decisions { justify-content: flex-end; flex-wrap: wrap; gap: 6px; }
+  .card-footer .decisions { width: 100%; }
+}

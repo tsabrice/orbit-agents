@@ -1,8 +1,8 @@
-# Relais: Product Requirements Document
+# Orbit: Product Requirements Document
 
 ## Executive summary
 
-Relais turns one event idea into up to ten reviewable action cards for the AWS Student Builder Group at UQAM. **The AI proposes, the organizer decides.** The loop is **propose, approve, execute, log**.
+Orbit is a personal workspace for specialized agents across different areas of life. Its first implemented agent, Communauté, turns an event idea into up to ten reviewable action cards. The AWS Student Builder Group at UQAM is this agent’s initial configured use case, not the product’s identity or long-term boundary. **The agents propose, you decide.** The loop is **propose, approve, execute, log**.
 
 Tonight's deliverable is a phone-responsive web app with editable drafts, individual approvals, Calendar and Discord execution, a JSON audit log, and an offline scripted demo. Backboard supplies one complete plan through a tool call and retrieves the voice guide and seeded history through Documents. A persistent mode badge distinguishes live generation from scripted output and simulated actions.
 
@@ -10,7 +10,7 @@ Build the offline loop first, start authorization alongside it, and deploy by 02
 
 ## Problem and users
 
-The primary user is Brice, organizer of the AWS Student Builder Group at UQAM. He coordinates event planning and communications with a five-role core team: Director of Events, Director of Marketing, two Technical Leads, and Event Coordinator. Relais reduces repeated writing and coordination while keeping publication decisions with him. Other clubs are deferred.
+The primary user is Brice, organizer of the AWS Student Builder Group at UQAM. He coordinates event planning and communications with a five-role core team: Director of Events, Director of Marketing, two Technical Leads, and Event Coordinator. Orbit reduces repeated writing and coordination while keeping publication decisions with him. Other personal scenarios belong in separate agents. The current release implements only Communauté; Projets personnels and Vie quotidienne are explicitly labeled future concepts, not functioning agents. The application shell, navigation, and product copy describe the broader personal workspace; club-specific voice and content stay within Communauté.
 
 Dated club notes record a Monday 16:00–18:00 preference. Seed it as a labeled fixture preference, not a Backboard Memory write. Explicit event input wins: a Thursday request receives an inline note, not a confirmation modal. Planned events and organizer preferences are not evidence of completed events or attendance. Program qualification thresholds and reporting-deadline enforcement are outside scope.
 
@@ -18,7 +18,7 @@ Dated club notes record a Monday 16:00–18:00 preference. Seed it as a labeled 
 
 **Goals:** demonstrate one sentence becoming channel-ready drafts; approve and execute two real actions when integrations work; copy other drafts; answer a history question with citations; complete an honest live or degraded demo, deployment, recording, and submission.
 
-**Non-goals tonight:** a production agent platform, unattended scheduling, multi-club accounts, Discord control, semantic fact verification, guaranteed exactly-once delivery, or comprehensive crash recovery. No social publishing APIs beyond Discord, voice, or 3D. Safety gates remain required even when integrations are cut.
+**Non-goals tonight:** implementing additional agents, a production agent platform, unattended scheduling, multi-club accounts, Discord control, semantic fact verification, guaranteed exactly-once delivery, or comprehensive crash recovery. No social publishing APIs beyond Discord, voice, or interactive 3D scenes. Static generated 3D icon assets are allowed: one consistent material family, reused across the interface. Safety gates remain required even when integrations are cut.
 
 ## The job (jobs to be done)
 
@@ -43,6 +43,10 @@ Dated club notes record a Monday 16:00–18:00 preference. Seed it as a labeled 
 
 Freeze the scripted reference clock at September 19, 2026. Resolve next Thursday to September 24, 18:00 in `America/Montreal`; verify runtime timezone support during setup. Live mode uses the actual request clock. Preflight destinations, credentials, RSVP link, and event duration. No invented location or link goes public. Offline means the local Node process and browser run without external network, not that the deployed website works without connectivity.
 
+## Current scope amendment
+
+Scripted demos, synthetic-history suggestions and fixture preference notes have been removed at the organizer’s request. These supersede the original demo requirements below. Live chat supports drafting and conversational revision. An explicit “Préparer pour approbation Discord” control stages a saved draft as one unapproved Discord card, checks the conversation revision, blocks unresolved placeholders and messages over 2,000 characters, and records its conversation provenance. No chat response can approve or publish. The configured destination is shown before staging and on the approval card.
+
 ## Scope (P0 / P1 / Deferred)
 
 **P0:** three fixture prompts and mock provider; typed plans and reducer; phone-responsive cards; edit/approve/reject/copy; simple persistent idempotency set plus in-process execution lock; append-only JSON audit log; Calendar and Discord executors; Backboard Tools and Documents; six synthetic history fixtures and cited ask; visible mode labels; single organizer bearer token; deployment; one Vitest core file and one offline Playwright smoke test.
@@ -51,7 +55,7 @@ At the integration cut line, use a Discord webhook if needed and make unavailabl
 
 **P1, after submission:** `/relais plan …` in Discord, returning a summary, separate approval buttons for the two real actions, and a full-plan web link; durable follow-up scheduling; separately approved Gmail drafts, never email sending; AI revision proposals; reviewed attendance import; optional Backboard Memory and Thinking. Model routing remains optional. Each enabled feature needs its own validated operations and approval scope.
 
-**Deferred:** autonomous actions, LinkedIn/Meetup/Instagram API posting, multi-club roles, voice, 3D, and MongoDB Atlas.
+**Deferred:** autonomous actions, LinkedIn/Meetup/Instagram API posting, multi-club roles, voice, interactive 3D scenes, and MongoDB Atlas.
 
 **Hardening, after the demo:** session authentication and associated CSRF protection if cookies are adopted; crash-safe multi-record persistence and execution reservations; provider-assisted reconciliation; crash-injection/restart tests; distributed spans; expanded browser/adversarial coverage; Discord adapter tests before that P1 surface launches. No hardening item may displace the demo-critical path.
 
@@ -93,7 +97,7 @@ Meetup: Hook; why useful; 🎯 Au programme; 👥 Pour qui ?; optional 💡 Quoi
 
 ## Architecture
 
-The agent lives server-side only in one Node process on Vultr, holding all secrets, authoritative state, logs, and provider calls. React/Vite surfaces are thin adapters over `plan / approve / execute / ask`. P0 uses the phone-responsive web app. Discord is an output destination; its P1 control surface cannot bypass the shared reducer or approval gate.
+The current Communauté agent lives server-side only in one Node process on Vultr, holding all secrets, authoritative state, logs, and provider calls. React/Vite surfaces are thin adapters over `plan / approve / execute / ask`. P0 uses the phone-responsive web app. Discord is an output destination; its P1 control surface cannot bypass the shared reducer or approval gate.
 
 Flow: web → Node services → framework-free TypeScript schemas/reducer → Backboard or mock → complete validated plan → user decision → executor → audit. Use JSON for plan snapshots, history, and the idempotency set; JSONL for the audit log. No database migration tonight.
 

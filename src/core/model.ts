@@ -1,3 +1,4 @@
+import { factErrors } from './fact-validation';
 import { z } from 'zod';
 export const TERMS = "En t'inscrivant, tu certifies avoir lu et accepté les conditions d'utilisation des événements AWS (https://aws.amazon.com/events/terms/).";
 const prose = z.string().min(1).max(6000);
@@ -12,13 +13,13 @@ export const wireAction = z.discriminatedUnion('type', [
 export const wirePlan = z.object({ actions:z.array(wireAction).min(1).max(10), followupPreview:prose }).strict();
 export type WirePlan = z.infer<typeof wirePlan>;
 export type WireAction = z.infer<typeof wireAction>;
-export const factKeys = ['title','dateLabel','start','end','room','rsvp','groupPage','audience','technicalName'] as const;
-export const factsSchema = z.object(Object.fromEntries(factKeys.map(k=>[k,z.string().max(1000).default('')])) as Record<typeof factKeys[number],z.ZodDefault<z.ZodString>>).strict();
+export const factKeys = ['title','dateLabel','start','end','room','rsvp','groupPage','audience','technicalName','message'] as const;
+export const factsSchema = z.object(Object.fromEntries(factKeys.map(k=>[k,z.string().max(k==='message'?2000:1000).default('')])) as Record<typeof factKeys[number],z.ZodDefault<z.ZodString>>).strict();
 export type Facts = z.infer<typeof factsSchema>;
 export type Status = 'proposed'|'approved'|'rejected'|'executing'|'executed'|'failed'|'unknown';
-export type Action = {version:1;id:string;wire:WireAction;type:WireAction['type'];payload:Record<string,unknown>;text:string;needsInput:string[];destination:string;capability:'real'|'draft';status:Status;payloadHash:string;approval?:{at:string;payloadHash:string;destination:string};receipt?:{id:string;url?:string;provider:string;simulated:boolean};error?:string};
-export type Plan = {version:1;id:string;revision:number;requestId:string;provider:'scripted'|'backboard';createdAt:string;timezone:string;facts:Facts;actions:Action[];followupPreview:string;wire:WirePlan;evidence?:{toolCallId:string;retrievedFiles:number}};
-export type Context = {id:string;requestId:string;now:string;provider:Plan['provider'];facts:Facts;calendarEnabled:boolean;discordEnabled:boolean;calendarTarget:string;discordTarget:string};
+export type Action = {version:1;id:string;wire:WireAction;type:WireAction['type'];payload:Record<string,unknown>;text:string;needsInput:string[];destination:string;capability:'real'|'draft';status:Status;payloadHash:string;executionBinding?:string;approval?:{at:string;payloadHash:string;destination:string};receipt?:{id:string;url?:string;provider:string;simulated:boolean};error?:string};
+export type Plan = {version:1;id:string;revision:number;requestId:string;provider:'scripted'|'backboard'|'manual';createdAt:string;timezone:string;facts:Facts;actions:Action[];followupPreview:string;wire:WirePlan;evidence?:{toolCallId:string;retrievedFiles:number}};
+export type Context = {id:string;requestId:string;now:string;provider:Plan['provider'];facts:Facts;calendarEnabled:boolean;discordEnabled:boolean;calendarTarget:string;discordTarget:string;executionBindings?:{calendar:string;discord:string}};
 export const labels:Record<WireAction['type'],string> = {create_calendar_event:'Événement Calendar',post_discord:'Annonce Discord',draft_meetup:'Description Meetup',draft_linkedin_club:'LinkedIn du club',draft_linkedin_personal:'LinkedIn personnel',draft_instagram:'Instagram',draft_dm:'Message à l’équipe'};
 export function canonical(value:unknown):string {
   if(Array.isArray(value)) return '['+value.map(canonical).join(',')+']';
@@ -26,15 +27,15 @@ export function canonical(value:unknown):string {
   return JSON.stringify(value) ?? 'null';
 }
 // Exact canonical snapshots avoid hash collisions in the approval gate. The executor hashes this for its compact durable key.
-export function fingerprint(a:Pick<Action,'payload'|'destination'|'capability'>) { return canonical({payload:a.payload,destination:a.destination,capability:a.capability}); }
+export function fingerprint(a:Pick<Action,'payload'|'destination'|'capability'|'executionBinding'>) { return canonical({payload:a.payload,destination:a.destination,capability:a.capability,...(a.executionBinding?{executionBinding:a.executionBinding}:{})}); }
 const reference=/\{\{fact\.([A-Za-z][A-Za-z0-9]*)\}\}/g;
-function render(value:unknown,facts:Facts,missing:Set<string>,key=''):unknown {
-  if(Array.isArray(value))return value.map(v=>render(v,facts,missing,key));
-  if(value && typeof value==='object') return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,render(v,facts,missing,k)]));
+function render(value:unknown,facts:Facts,missing:Set<string>,key='',path='draft'):unknown {
+  if(Array.isArray(value))return value.map((v,i)=>render(v,facts,missing,key,`${path}[${i}]`));
+  if(value && typeof value==='object') return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,render(v,facts,missing,k,`${path}.${k}`)]));
   if(typeof value!=='string')return value;
   if(key==='channel'||key==='recipientRole')return value;
   const rest=value.replace(reference,'');
-  if(/[\d@\[\]{}\u2014]|(?:https?:|www\.|\b[a-z0-9-]+\.(?:com|org|net|io|ca|dev)\b)/i.test(rest))throw new Error('Le texte contient un chiffre, lien, mention ou placeholder hors référence {{fact.key}}.');
+  if(/[\d@\[\]{}\u2014]|(?:https?:|www\.|\b[a-z0-9-]+\.(?:com|org|net|io|ca|dev)\b)/i.test(rest))throw new Error(`${path} : chiffre, lien, mention ou placeholder hors référence {{fact.key}}.`);
   return value.replace(reference,(_,name:string)=>{
     if(!factKeys.includes(name as typeof factKeys[number]))throw new Error('Référence de fait inconnue.');
     const fact=facts[name as keyof Facts];
@@ -49,17 +50,15 @@ function display(type:Action['type'],p:Record<string,unknown>):string {
   return String(p.text);
 }
 function validateFacts(f:Facts) {
-  for(const key of ['start','end'] as const)if(f[key] && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})$/.test(f[key]))throw new Error('Dates ISO avec fuseau requises.');
-  for(const key of ['start','end'] as const)if(f[key] && !Number.isFinite(Date.parse(f[key])))throw new Error('Date invalide.');
-  if(f.start&&f.end&&Date.parse(f.end)<=Date.parse(f.start))throw new Error('La fin doit suivre le début.');
-  for(const key of ['rsvp','groupPage'] as const)if(f[key]) {try {if(new URL(f[key]).protocol!=='https:')throw 0;}catch{throw new Error('Les liens confirmés doivent utiliser HTTPS.');}}
+  const errors=factErrors(f);
+  if(Object.keys(errors).length)throw new Error(Object.values(errors).join(' '));
 }
 export function normalize(input:unknown,ctx:Context):{ok:true;value:Plan}|{ok:false;errors:string[]} {
   try {
     const isNormalized=!!input&&typeof input==='object'&&'version' in input;
     const wire=wirePlan.parse(isNormalized?(input as Plan).wire:input); const facts=factsSchema.parse(ctx.facts); validateFacts(facts);
     const actions=wire.actions.map((w,i):Action=>{
-      const missing=new Set<string>(); const payload=render(w.payload,facts,missing) as Record<string,unknown>;
+      const missing=new Set<string>(); const payload=render(w.payload,facts,missing,'',`actions[${i}].payload`) as Record<string,unknown>;
       const isCalendar=w.type==='create_calendar_event', isDiscord=w.type==='post_discord';
       const capability=(isCalendar&&ctx.calendarEnabled)||(isDiscord&&ctx.discordEnabled)?'real':'draft';
       if(isCalendar) {
@@ -67,10 +66,10 @@ export function normalize(input:unknown,ctx:Context):{ok:true;value:Plan}|{ok:fa
         if(w.payload.start!=='{{fact.start}}'||w.payload.end!=='{{fact.end}}'||w.payload.location!=='{{fact.room}}')throw new Error('Références Calendar invalides.');
       }
       const destination=isCalendar?ctx.calendarTarget:isDiscord?ctx.discordTarget:'Copie manuelle uniquement';
-      const a:Action={version:1,id:`${ctx.id}-${i+1}`,type:w.type,wire:w,payload,text:display(w.type,payload),needsInput:[...missing],destination,capability,status:'proposed',payloadHash:''};
+      const a:Action={version:1,id:`${ctx.id}-${i+1}`,type:w.type,wire:w,payload,text:display(w.type,payload),needsInput:[...missing],destination,capability,status:'proposed',payloadHash:'',...(capability==='real'&&ctx.executionBindings?{executionBinding:isCalendar?ctx.executionBindings.calendar:ctx.executionBindings.discord}:{})};
       a.payloadHash=fingerprint(a); return a;
     });
-    const preview=render(wire.followupPreview,facts,new Set()) as string;
+    const preview=render(wire.followupPreview,facts,new Set(),'','followupPreview') as string;
     const value:Plan={version:1,id:ctx.id,revision:1,requestId:ctx.requestId,provider:ctx.provider,createdAt:ctx.now,timezone:'America/Montreal',facts,actions,followupPreview:preview,wire};
     if(isNormalized&&canonical(input)!==canonical(value))throw new Error('Snapshot normalisé invalide.');
     return {ok:true,value};
@@ -96,7 +95,7 @@ export function reduce(plan:Plan|null,op:Op):Plan {
     if(!['proposed','approved','failed'].includes(current.status))throw new Error('Cette action ne peut plus être rejetée.');
     next={...next,status:'rejected',approval:undefined};
   } else if(op.type==='execute') {
-    if(current.capability!=='real'||!current.approval||current.approval.payloadHash!==current.payloadHash)throw new Error('Exécution non approuvée.');
+    if(current.capability!=='real'||!current.approval||current.approval.payloadHash!==current.payloadHash||current.approval.destination!==current.destination)throw new Error('Exécution non approuvée.');
     if(op.phase==='start'){if(current.status!=='approved')throw new Error('Action non approuvée.');next.status='executing';}
     else {if(current.status!=='executing'&&current.status!=='unknown')throw new Error('Résultat inattendu.');if(!op.receipt)throw new Error('Reçu requis.');next={...next,status:'executed',receipt:op.receipt,error:undefined};}
   } else {if(current.status!=='executing'&&current.status!=='approved')throw new Error('Échec inattendu.');next={...next,status:op.unknown?'unknown':'failed',error:op.error};}
