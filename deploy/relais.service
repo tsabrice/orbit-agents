@@ -1,0 +1,21 @@
+[Unit]
+Description=Relais club operations
+After=network.target
+
+[Service]
+Type=simple
+User=relais
+WorkingDirectory=/opt/relais
+Environment=NODE_ENV=production
+Environment=HOST=127.0.0.1
+Environment=PORT=3002
+EnvironmentFile=/opt/relais/.env
+ExecStart=/usr/bin/node --import tsx server/index.ts
+Restart=on-failure
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/relais/.data
+
+[Install]
+WantedBy=multi-user.target

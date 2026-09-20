@@ -1,0 +1,2 @@
+import { defineConfig } from '@playwright/test';
+export default defineConfig({testDir:'./tests/browser',workers:1,fullyParallel:false,use:{baseURL:'http://127.0.0.1:3100',viewport:{width:1440,height:1000},launchOptions:{executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']}},webServer:{command:'PORT=3100 DATA_DIR=.data/browser-test LIVE_AI_ENABLED=false SIDE_EFFECTS_ENABLED=false ORGANIZER_TOKEN= npm run dev',url:'http://127.0.0.1:3100/api/status',reuseExistingServer:false,timeout:60000}});

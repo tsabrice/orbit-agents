@@ -1,0 +1,4 @@
+# Set RELAIS_DOMAIN in Caddy's environment to your verified domain.
+{$RELAIS_DOMAIN} {
+    reverse_proxy 127.0.0.1:3002
+}
